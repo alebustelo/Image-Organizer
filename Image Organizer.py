@@ -167,7 +167,6 @@ def click(event):
     if event.y > location_y + thumbnail_sizes[0][1]+10 or (event.y > location_y and event.y < location_y + thumbnail_sizes[0][1]+10 and event.x > images_in_last_row * (thumbnail_sizes[0][0]+10)):
         print("OUT OF BOUNDS")
     else:
-        #some of the boxes overlap, need to fix
         box_location = ""
         if event.x%(thumbnail_sizes[0][0]+10) < (thumbnail_sizes[0][0]+10)/2:
             top_corner_x = event.x - event.x%(thumbnail_sizes[0][0]+10) + 5
@@ -178,12 +177,12 @@ def click(event):
             bottom_corner_x = top_corner_x+(thumbnail_sizes[0][0]+10)/2
             box_location += "right"
         if event.y%(thumbnail_sizes[0][1]+10) < (thumbnail_sizes[0][1]+10)/2:
-            top_corner_y = event.y - event.y%(thumbnail_sizes[0][1]+10)
-            bottom_corner_y = top_corner_y+(thumbnail_sizes[0][1]+10)/2 + 5
+            top_corner_y = event.y - event.y%(thumbnail_sizes[0][1]+10) + 5
+            bottom_corner_y = top_corner_y+(thumbnail_sizes[0][1]+10)/2
             box_location = "top" + box_location
         else:
-            top_corner_y = event.y - event.y%(thumbnail_sizes[0][1]+10) + (thumbnail_sizes[0][1]+10)/2
-            bottom_corner_y = top_corner_y+(thumbnail_sizes[0][1]+10)/2 + 5
+            top_corner_y = event.y - event.y%(thumbnail_sizes[0][1]+10) + (thumbnail_sizes[0][1])/2 + 10
+            bottom_corner_y = top_corner_y+(thumbnail_sizes[0][1]+10)/2
             box_location = "bottom" + box_location
         color = ""
         if box_location == "topleft":
