@@ -159,12 +159,15 @@ def click(event):
     print("Click at "+str(event.x)+","+str(event.y))
     global thumbnail_sizes
     global location_y
+    global canvas_width
     global image_count
-    images_in_last_row = (max_location_x)/(thumbnail_sizes[0][0]+10) - (((max_location_x)/(thumbnail_sizes[0][0]+10)) * ((location_y)/(thumbnail_sizes[0][1]+10)) - image_count)
-    print(images_in_last_row)
+    images_in_last_row = image_count%(canvas_width/thumbnail_sizes[0][0]+10)
+    print("Images in last row "+str(images_in_last_row))
+    #out of bounds needs to be recalculated properly, currently allows selecting wrong area
     if event.y > location_y + thumbnail_sizes[0][1]+10 or (event.y > location_y and event.y < location_y + thumbnail_sizes[0][1]+10 and event.x > images_in_last_row * (thumbnail_sizes[0][0]+10)):
         print("OUT OF BOUNDS")
     else:
+        #some of the boxes overlap, need to fix
         box_location = ""
         if event.x%(thumbnail_sizes[0][0]+10) < (thumbnail_sizes[0][0]+10)/2:
             top_corner_x = event.x - event.x%(thumbnail_sizes[0][0]+10) + 5
@@ -176,11 +179,11 @@ def click(event):
             box_location += "right"
         if event.y%(thumbnail_sizes[0][1]+10) < (thumbnail_sizes[0][1]+10)/2:
             top_corner_y = event.y - event.y%(thumbnail_sizes[0][1]+10)
-            bottom_corner_y = top_corner_y+(thumbnail_sizes[0][1]+10)/2
+            bottom_corner_y = top_corner_y+(thumbnail_sizes[0][1]+10)/2 + 5
             box_location = "top" + box_location
         else:
             top_corner_y = event.y - event.y%(thumbnail_sizes[0][1]+10) + (thumbnail_sizes[0][1]+10)/2
-            bottom_corner_y = top_corner_y+(thumbnail_sizes[0][1]+10)/2
+            bottom_corner_y = top_corner_y+(thumbnail_sizes[0][1]+10)/2 + 5
             box_location = "bottom" + box_location
         color = ""
         if box_location == "topleft":
@@ -258,7 +261,7 @@ def load_images():
             file, ext = os.path.splitext(infile)
             images.append(PIL.Image.open(infile))
             image_count += 1
-    print("Done loading images")
+    print("Done loading "+str(image_count)+" images")
     reload_images = True
     for size in reversed(thumbnail_sizes): #load in reverse so we can just downscale images after loading them once (way faster)
         stored_images.insert(0, resize_images(size)) #insert generated lists backwards since they are generated in reverse order
