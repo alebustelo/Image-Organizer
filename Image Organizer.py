@@ -163,7 +163,7 @@ def click(event):
     global image_count
     images_in_last_row = image_count%(canvas_width/thumbnail_sizes[0][0]+10)
     print("Images in last row "+str(images_in_last_row))
-    #out of bounds needs to be recalculated properly, currently allows selecting wrong area
+    #out of bounds needs to be recalculated properly, currently allows selecting wrong area. Problem might be in image_number
     if event.y > location_y + thumbnail_sizes[0][1]+10 or (event.y > location_y and event.y < location_y + thumbnail_sizes[0][1]+10 and event.x > images_in_last_row * (thumbnail_sizes[0][0]+10)):
         print("OUT OF BOUNDS")
     else:
