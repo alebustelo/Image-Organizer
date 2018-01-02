@@ -146,25 +146,31 @@ resize_large_wind = menu_canvas.create_window(120, 0, anchor=NW, window=resize_l
 
 def image_number(click_position_x, click_position_y):
     global thumbnail_sizes
-    global max_location_x
-    print("max location x: "+str(max_location_x)+" thumbnail width "+str(thumbnail_sizes[0][0])+" height "+str(thumbnail_sizes[0][1]))
-    image_in_row = math.floor(click_position_x/(thumbnail_sizes[0][0]+10))
-    row_number = math.floor(click_position_y/(thumbnail_sizes[0][1]+10))
-    image_num = (row_number) * ((max_location_x)/(thumbnail_sizes[0][0]+10)) + (image_in_row)
-    print("Image number "+str(image_num))
+    global canvas_width
+    print("thumbnail width "+str(thumbnail_sizes[0][0])+" height "+str(thumbnail_sizes[0][1]))
+    if click_position_x < 5 or click_position_y < 5:
+        image_num = -1
+    else:
+        image_in_row = math.floor(click_position_x/(thumbnail_sizes[0][0]+10+5))
+        row_number = math.floor(click_position_y/(thumbnail_sizes[0][1]+10+5))
+        image_num = (row_number) * math.floor(canvas_width/(thumbnail_sizes[0][0]+10)) + (image_in_row)
+        print("Image in row "+str(image_in_row)+" row number "+str(row_number)+" Image number "+str(image_num))
     return image_num
 
 def click(event):
+    #clicking a 5 pixel box around the picture allows selecting that picture
     print("Creating box")
     print("Click at "+str(event.x)+","+str(event.y))
     global thumbnail_sizes
     global location_y
     global canvas_width
     global image_count
-    images_in_last_row = image_count%(canvas_width/thumbnail_sizes[0][0]+10)
-    print("Images in last row "+str(images_in_last_row))
-    #out of bounds needs to be recalculated properly, currently allows selecting wrong area. Problem might be in image_number
-    if event.y > location_y + thumbnail_sizes[0][1]+10 or (event.y > location_y and event.y < location_y + thumbnail_sizes[0][1]+10 and event.x > images_in_last_row * (thumbnail_sizes[0][0]+10)):
+    images_in_last_row = image_count%(math.floor(canvas_width/(thumbnail_sizes[0][0]+10)))
+    if images_in_last_row == 0:
+        images_in_last_row = image_count
+    print("Images in last row "+str(images_in_last_row)+" canvas width "+str(canvas_width))
+    print("location y "+str(location_y))
+    if event.y >= location_y + thumbnail_sizes[0][1]+5 or (event.y > location_y and event.y < location_y + thumbnail_sizes[0][1]+5 and event.x >= (images_in_last_row * (thumbnail_sizes[0][0]+10) - 5)):
         print("OUT OF BOUNDS")
     else:
         box_location = ""
@@ -193,13 +199,15 @@ def click(event):
             color = "orange"    
         elif box_location == "bottomright":
             color = "green"
-        tag = str(image_number(event.x, event.y))+box_location
-        if canvas.find_withtag(tag):
-            canvas.delete(tag)
-        else:        
-            print("Tag "+tag+" top corner "+str(top_corner_x)+","+str(top_corner_y)+" bottom corner "+str(bottom_corner_x)+","+str(bottom_corner_y)+" "+box_location)
-            canvas.create_rectangle(top_corner_x, top_corner_y, bottom_corner_x, bottom_corner_y, fill=color, tags=tag)
-            canvas.tag_lower(tag)
+        if image_number(event.x, event.y) != -1:
+            tag = str(image_number(event.x, event.y))+box_location
+            if canvas.find_withtag(tag):
+                print("Deleting image with tag "+tag)
+                canvas.delete(tag)
+            else:
+                print("Tag "+tag+" top corner "+str(top_corner_x)+","+str(top_corner_y)+" bottom corner "+str(bottom_corner_x)+","+str(bottom_corner_y)+" "+box_location)
+                canvas.create_rectangle(top_corner_x, top_corner_y, bottom_corner_x, bottom_corner_y, fill=color, tags=tag)
+                canvas.tag_lower(tag)
     print("Done")
 
 canvas.bind("<ButtonPress-1>", click)
@@ -218,7 +226,7 @@ def display_images(im_size):
     for image in stored_images[im_size]:
         canvas.create_image(location_x, location_y, anchor=NW, image=image, tags="image")
         location_x += size[0] + 10
-        if location_x >= math.floor((canvas_width/(size[0]+10))) * size[0]:
+        if location_x >= math.floor((canvas_width/(size[0]+10))) * (size[0]+10):
             if location_x > max_location_x:
                 max_location_x = location_x - 10
             location_x = 10
