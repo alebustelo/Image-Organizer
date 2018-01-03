@@ -127,6 +127,9 @@ def resize_large_click():
         reload_images = True    
     thumbnail_sizes[0] = thumbnail_sizes[3]
     display_images(3)
+    
+def select_location(color):
+    print("Do something "+color)
 
 
 resize_down_button = Button(menu_canvas, text="-", command=resize_down_click, width=10)
@@ -143,6 +146,18 @@ resize_med_wind = menu_canvas.create_window(90, 0, anchor=NW, window=resize_med_
 
 resize_large_button = Button(menu_canvas, text="O", command=resize_large_click, width=10)
 resize_large_wind = menu_canvas.create_window(120, 0, anchor=NW, window=resize_large_button, height=30, width=30)
+
+blue_folder_button = Button(menu_canvas, text="Blue", command=lambda: select_location("blue"), bg="blue", width=10)
+blue_folder_wind = menu_canvas.create_window(150, 0, anchor=NW, window=blue_folder_button, height=30, width=50)
+
+red_folder_button = Button(menu_canvas, text="Red", command=lambda: select_location("red"), bg="red", width=10)
+red_folder_wind = menu_canvas.create_window(200, 0, anchor=NW, window=red_folder_button, height=30, width=50)
+
+orange_folder_button = Button(menu_canvas, text="Orange", command=lambda: select_location("orange"), bg="orange", width=10)
+orange_folder_wind = menu_canvas.create_window(250, 0, anchor=NW, window=orange_folder_button, height=30, width=50)
+
+green_folder_button = Button(menu_canvas, text="Green", command=lambda: select_location("green"), bg="green", width=10)
+green_folder_wind = menu_canvas.create_window(300, 0, anchor=NW, window=green_folder_button, height=30, width=50)
 
 def image_number(click_position_x, click_position_y):
     global thumbnail_sizes
@@ -170,6 +185,7 @@ def click(event):
         images_in_last_row = image_count
     print("Images in last row "+str(images_in_last_row)+" canvas width "+str(canvas_width))
     print("location y "+str(location_y))
+    #bug where 3 images present and image size = 100 and pressing at location (32x112) causes blue square to be selected incorrectly
     if event.y >= location_y + thumbnail_sizes[0][1]+5 or (event.y > location_y and event.y < location_y + thumbnail_sizes[0][1]+5 and event.x >= (images_in_last_row * (thumbnail_sizes[0][0]+10) - 5)):
         print("OUT OF BOUNDS")
     else:
@@ -199,21 +215,29 @@ def click(event):
             color = "orange"    
         elif box_location == "bottomright":
             color = "green"
-        if image_number(event.x, event.y) != -1:
-            tag = str(image_number(event.x, event.y))+box_location
-            if canvas.find_withtag(tag):
-                print("Deleting image with tag "+tag)
+        img_num = image_number(event.x, event.y)
+        if img_num != -1:
+            tag = str(img_num)+box_location
+            if canvas.find_withtag(tag): #remove selection square and untag image
+                print("Deleting square with tag "+tag)
                 canvas.delete(tag)
-            else:
+                canvas.dtag(canvas.find_withtag(color+str(img_num)), color+str(img_num))
+                for item in canvas.find_all():
+                    print(canvas.gettags(item))
+            else: #add selection square and tag image
                 print("Tag "+tag+" top corner "+str(top_corner_x)+","+str(top_corner_y)+" bottom corner "+str(bottom_corner_x)+","+str(bottom_corner_y)+" "+box_location)
                 canvas.create_rectangle(top_corner_x, top_corner_y, bottom_corner_x, bottom_corner_y, fill=color, tags=tag)
                 canvas.tag_lower(tag)
+                canvas.addtag_withtag(color+str(img_num), str(event.x - event.x%(thumbnail_sizes[0][0]+10) + 10)+","+str(event.y - event.y%(thumbnail_sizes[0][1]+10) + 10))
+                for item in canvas.find_all():
+                    print(canvas.gettags(item))
     print("Done")
 
 canvas.bind("<ButtonPress-1>", click)
 
 #display images on canvas
 def display_images(im_size):
+    image_number = 0
     global location_y
     global max_location_x
     location_x = 10
@@ -224,7 +248,9 @@ def display_images(im_size):
     size = thumbnail_sizes[im_size]
     canvas.delete("image")
     for image in stored_images[im_size]:
-        canvas.create_image(location_x, location_y, anchor=NW, image=image, tags="image")
+        canvas.create_image(location_x, location_y, anchor=NW, image=image, tags=("image", str(location_x)+","+str(location_y))) #store?
+        print(canvas.find_all())
+        image_number += 1
         location_x += size[0] + 10
         if location_x >= math.floor((canvas_width/(size[0]+10))) * (size[0]+10):
             if location_x > max_location_x:
@@ -273,7 +299,7 @@ def load_images():
     for size in reversed(thumbnail_sizes): #load in reverse so we can just downscale images after loading them once (way faster)
         stored_images.insert(0, resize_images(size)) #insert generated lists backwards since they are generated in reverse order
     print("Done resizing and storing images")
-    display_images(0)
+    #display_images(0)
            
 def main():
     load_images()
