@@ -48,6 +48,8 @@ canvas.pack(fill=BOTH, expand=1)
 xscrollbar.config(command=canvas.xview)
 yscrollbar.config(command=canvas.yview)
 
+destination_locations = {"blue": "", "red": "", "orange": "", "green": ""} #where the images can be copied/moved to
+
 image_count = 0
 reload_images = False
 thumbnail_sizes = [(50, 50), (128, 128), (300, 300), (600, 600)] #size 0 is the current size, 1 is small, 2 is medium, 3 is large
@@ -128,9 +130,55 @@ def resize_large_click():
     thumbnail_sizes[0] = thumbnail_sizes[3]
     display_images(3)
     
-def select_location(color):
-    print("Do something "+color)
+blue_var = StringVar()
+blue_var.set(destination_locations["blue"])
 
+red_var = StringVar()
+red_var.set(destination_locations["red"])
+
+orange_var = StringVar()
+orange_var.set(destination_locations["orange"])
+
+green_var = StringVar()
+green_var.set(destination_locations["green"])
+
+def select_location(color):
+    #take user input for image destination
+    print("Do something "+color)
+    global destination_locations
+    top = Toplevel()
+    top.geometry("%dx%d%+d%+d" % (200, 200, 300, 300))
+    top.title("Choose "+color+" destination")
+    label = Label(top, text="Type in absolute path\n of destination for "+color+" images")
+    label.pack(fill=X)
+    entry = Entry(top)
+    entry.insert(0, destination_locations[color])
+    entry.pack()
+    entry.focus_set()
+    def save_new_location():
+        print("New entry "+entry.get())
+        destination_locations[color] = entry.get()
+        print("Destination for "+color+" is "+destination_locations[color])
+        if color == "blue":
+            global blue_var
+            blue_var.set(destination_locations[color])
+        elif color == "red":
+            global red_var
+            red_var.set(destination_locations[color])
+        elif color == "orange":
+            global orange_var
+            orange_var.set(destination_locations[color])
+        elif color == "green":
+            global green_var
+            green_var.set(destination_locations[color])
+    save = Button(top, text="Save", command=save_new_location)
+    save.pack()
+    close = Button(top, text="Close", command=top.destroy)
+    close.pack()
+
+def execute_moves():
+    #move images and stuff
+    print("Move images and stuff")
 
 resize_down_button = Button(menu_canvas, text="-", command=resize_down_click, width=10)
 resize_down_wind = menu_canvas.create_window(0, 0, anchor=NW, window=resize_down_button, height=30, width=30)
@@ -147,17 +195,20 @@ resize_med_wind = menu_canvas.create_window(90, 0, anchor=NW, window=resize_med_
 resize_large_button = Button(menu_canvas, text="O", command=resize_large_click, width=10)
 resize_large_wind = menu_canvas.create_window(120, 0, anchor=NW, window=resize_large_button, height=30, width=30)
 
-blue_folder_button = Button(menu_canvas, text="Blue", command=lambda: select_location("blue"), bg="blue", width=10)
+blue_folder_button = Button(menu_canvas, textvariable=blue_var, command=lambda: select_location("blue"), bg="blue", width=10)
 blue_folder_wind = menu_canvas.create_window(150, 0, anchor=NW, window=blue_folder_button, height=30, width=50)
 
-red_folder_button = Button(menu_canvas, text="Red", command=lambda: select_location("red"), bg="red", width=10)
+red_folder_button = Button(menu_canvas, textvariable=red_var, command=lambda: select_location("red"), bg="red", width=10)
 red_folder_wind = menu_canvas.create_window(200, 0, anchor=NW, window=red_folder_button, height=30, width=50)
 
-orange_folder_button = Button(menu_canvas, text="Orange", command=lambda: select_location("orange"), bg="orange", width=10)
+orange_folder_button = Button(menu_canvas, textvariable=orange_var, command=lambda: select_location("orange"), bg="orange", width=10)
 orange_folder_wind = menu_canvas.create_window(250, 0, anchor=NW, window=orange_folder_button, height=30, width=50)
 
-green_folder_button = Button(menu_canvas, text="Green", command=lambda: select_location("green"), bg="green", width=10)
+green_folder_button = Button(menu_canvas, textvariable=green_var, command=lambda: select_location("green"), bg="green", width=10)
 green_folder_wind = menu_canvas.create_window(300, 0, anchor=NW, window=green_folder_button, height=30, width=50)
+
+execute_button = Button(menu_canvas, text="Execute", command=execute_moves, width=10)
+execute_wind = menu_canvas.create_window(350, 0, anchor=NW, window=execute_button, height=30, width=70)
 
 def image_number(click_position_x, click_position_y):
     global thumbnail_sizes
@@ -248,7 +299,8 @@ def display_images(im_size):
     size = thumbnail_sizes[im_size]
     canvas.delete("image")
     for image in stored_images[im_size]:
-        canvas.create_image(location_x, location_y, anchor=NW, image=image, tags=("image", str(location_x)+","+str(location_y))) #store?
+        #store image number and file name in dictionary
+        canvas.create_image(location_x, location_y, anchor=NW, image=image, tags=("image", str(location_x)+","+str(location_y)))
         print(canvas.find_all())
         image_number += 1
         location_x += size[0] + 10
@@ -266,6 +318,7 @@ def resize_images(size):
     global reload_images
     global resizing_images
     global images
+    #turn canvasImages into a dictionary that stores filename and image object, then use that info in display_images to associate image number with file name
     canvasImages = []
     print("Resizing to "+str(size[0])+"x"+str(size[1]))
     if reload_images:
