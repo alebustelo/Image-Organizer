@@ -49,7 +49,7 @@ canvas.pack(fill=BOTH, expand=1)
 xscrollbar.config(command=canvas.xview)
 yscrollbar.config(command=canvas.yview)
 
-destination_locations = {"blue": "B:\Dropbox\Documents\Programming\Python\Image Organizer\Destination 1\\", "red": "B:\Dropbox\Documents\Programming\Python\Image Organizer\Destination 2\\", "orange": "B:\Dropbox\Documents\Programming\Python\Image Organizer\Destination 3\\", "green": "B:\Dropbox\Documents\Programming\Python\Image Organizer\Destination 4\\"} #where the images can be copied/moved to
+destination_locations = {"blue": "", "red": "", "orange": "", "green": ""} #where the images can be copied/moved to
 image_names = {}
 images_to_move = {"blue": [], "red": [], "orange": [], "green": []}
 
@@ -198,7 +198,6 @@ def execute_moves():
                 image_set.add(image)
             if os.name == "posix":
                 command.append(destination_locations[color])
-            print("-----------------------------------------------")
             print("Copying images with command: \n"+str(command))
             #execute command
             subprocess.run(command, shell=True)
