@@ -3,6 +3,7 @@ from PIL import ImageTk
 import PIL.Image
 from tkinter import *
 import glob, os, math
+import subprocess
 
 #TODO:
 #-add menu bar at top with configuration and exit options
@@ -11,7 +12,7 @@ import glob, os, math
 
 #A bug in PIL currently causes the application to crash when loading a large number of images. PIL also doesn't like images that have been programmatically truncated incorrectly (inconsistent sizes?)
 
-folder = ""
+folder = os.path.dirname(os.path.realpath(__file__))+"\\"
 
 #accepts folder path as argument
 if len(sys.argv) > 1:
@@ -48,7 +49,9 @@ canvas.pack(fill=BOTH, expand=1)
 xscrollbar.config(command=canvas.xview)
 yscrollbar.config(command=canvas.yview)
 
-destination_locations = {"blue": "", "red": "", "orange": "", "green": ""} #where the images can be copied/moved to
+destination_locations = {"blue": "B:\Dropbox\Documents\Programming\Python\Image Organizer\Destination 1\\", "red": "B:\Dropbox\Documents\Programming\Python\Image Organizer\Destination 2\\", "orange": "B:\Dropbox\Documents\Programming\Python\Image Organizer\Destination 3\\", "green": "B:\Dropbox\Documents\Programming\Python\Image Organizer\Destination 4\\"} #where the images can be copied/moved to
+image_names = {}
+images_to_move = {"blue": [], "red": [], "orange": [], "green": []}
 
 image_count = 0
 reload_images = False
@@ -158,7 +161,7 @@ def select_location(color):
     def save_new_location():
         print("New entry "+entry.get())
         destination_locations[color] = entry.get()
-        print("Destination for "+color+" is "+destination_locations[color])
+        print("Destination for "+color+" is "+"\""+destination_locations[color]+"\"")
         if color == "blue":
             global blue_var
             blue_var.set(destination_locations[color])
@@ -177,8 +180,39 @@ def select_location(color):
     close.pack()
 
 def execute_moves():
-    #move images and stuff
-    print("Move images and stuff")
+    #prepare terminal or command line commands to mass-copy images and execute them, then delete images
+    print("Moving images")
+    global folder
+    command = []
+    image_set = set()
+    for color in images_to_move:
+        print(color)
+        if images_to_move[color] != []:
+            if os.name != "posix":
+                command = ["robocopy", folder, destination_locations[color]]
+            else:
+                command = ["cp"]
+            for image in images_to_move[color]:
+                print("\t"+image.split("\\")[-1])
+                command.append(image.split("\\")[-1])
+                image_set.add(image)
+            if os.name == "posix":
+                command.append(destination_locations[color])
+            print("-----------------------------------------------")
+            print("Copying images with command: \n"+str(command))
+            #execute command
+            subprocess.run(command, shell=True)
+    if os.name != "posix":
+        command = ["del"]
+    else:
+        command = ["rm"]
+    for image in image_set:
+        command.append(image.split("\\")[-1])
+    print("Deleting images with command: "+str(command))
+    #delete images
+    subprocess.run(command, shell=True)
+    command = []
+    image_set.clear()
 
 resize_down_button = Button(menu_canvas, text="-", command=resize_down_click, width=10)
 resize_down_wind = menu_canvas.create_window(0, 0, anchor=NW, window=resize_down_button, height=30, width=30)
@@ -213,34 +247,36 @@ execute_wind = menu_canvas.create_window(350, 0, anchor=NW, window=execute_butto
 def image_number(click_position_x, click_position_y):
     global thumbnail_sizes
     global canvas_width
-    print("thumbnail width "+str(thumbnail_sizes[0][0])+" height "+str(thumbnail_sizes[0][1]))
+    print("thumbnail width: "+str(thumbnail_sizes[0][0])+", height: "+str(thumbnail_sizes[0][1]))
     if click_position_x < 5 or click_position_y < 5:
         image_num = -1
     else:
         image_in_row = math.floor(click_position_x/(thumbnail_sizes[0][0]+10+5))
         row_number = math.floor(click_position_y/(thumbnail_sizes[0][1]+10+5))
         image_num = (row_number) * math.floor(canvas_width/(thumbnail_sizes[0][0]+10)) + (image_in_row)
-        print("Image in row "+str(image_in_row)+" row number "+str(row_number)+" Image number "+str(image_num))
+        print("Image in row: "+str(image_in_row)+", row number: "+str(row_number)+", Image number: "+str(image_num))
     return image_num
 
 def click(event):
     #clicking a 5 pixel box around the picture allows selecting that picture
     print("Creating box")
-    print("Click at "+str(event.x)+","+str(event.y))
+    print("Click at: "+str(event.x)+","+str(event.y))
     global thumbnail_sizes
     global location_y
     global canvas_width
     global image_count
-    images_in_last_row = image_count%(math.floor(canvas_width/(thumbnail_sizes[0][0]+10)))
+    global image_names
+    images_in_last_row = image_count%(math.floor(canvas_width/(thumbnail_sizes[0][0]+10))) #if images don't fit in screen, then div by 0 or mod by 0 error
     if images_in_last_row == 0:
         images_in_last_row = image_count
-    print("Images in last row "+str(images_in_last_row)+" canvas width "+str(canvas_width))
-    print("location y "+str(location_y))
+    print("Images in last row: "+str(images_in_last_row)+", canvas width: "+str(canvas_width))
+    print("location y: "+str(location_y))
     #bug where 3 images present and image size = 100 and pressing at location (32x112) causes blue square to be selected incorrectly
     if event.y >= location_y + thumbnail_sizes[0][1]+5 or (event.y > location_y and event.y < location_y + thumbnail_sizes[0][1]+5 and event.x >= (images_in_last_row * (thumbnail_sizes[0][0]+10) - 5)):
         print("OUT OF BOUNDS")
     else:
         box_location = ""
+        image_location = str(event.x - event.x%(thumbnail_sizes[0][0]+10) + 10)+","+str(event.y - event.y%(thumbnail_sizes[0][1]+10) + 10)
         if event.x%(thumbnail_sizes[0][0]+10) < (thumbnail_sizes[0][0]+10)/2:
             top_corner_x = event.x - event.x%(thumbnail_sizes[0][0]+10) + 5
             bottom_corner_x = top_corner_x+(thumbnail_sizes[0][0]+10)/2
@@ -270,18 +306,20 @@ def click(event):
         if img_num != -1:
             tag = str(img_num)+box_location
             if canvas.find_withtag(tag): #remove selection square and untag image
-                print("Deleting square with tag "+tag)
+                print("Deleting square with tag: "+tag)
                 canvas.delete(tag)
                 canvas.dtag(canvas.find_withtag(color+str(img_num)), color+str(img_num))
-                for item in canvas.find_all():
-                    print(canvas.gettags(item))
+                print("Removing '"+str(image_names[image_location])+"' from "+color+" list.")
+                images_to_move[color].remove(str(image_names[image_location]))
             else: #add selection square and tag image
-                print("Tag "+tag+" top corner "+str(top_corner_x)+","+str(top_corner_y)+" bottom corner "+str(bottom_corner_x)+","+str(bottom_corner_y)+" "+box_location)
+                print("Tag: "+tag+", top corner: "+str(top_corner_x)+","+str(top_corner_y)+", bottom corner: "+str(bottom_corner_x)+","+str(bottom_corner_y)+" "+box_location)
                 canvas.create_rectangle(top_corner_x, top_corner_y, bottom_corner_x, bottom_corner_y, fill=color, tags=tag)
                 canvas.tag_lower(tag)
-                canvas.addtag_withtag(color+str(img_num), str(event.x - event.x%(thumbnail_sizes[0][0]+10) + 10)+","+str(event.y - event.y%(thumbnail_sizes[0][1]+10) + 10))
-                for item in canvas.find_all():
-                    print(canvas.gettags(item))
+                canvas.addtag_withtag(color+str(img_num), image_location)
+                print("Image named '"+str(image_names[image_location])+"' selected with "+color+" tag.")
+                images_to_move[color].append(str(image_names[image_location]))
+            for item in canvas.find_all():
+                print(canvas.gettags(item))
     print("Done")
 
 canvas.bind("<ButtonPress-1>", click)
@@ -296,12 +334,13 @@ def display_images(im_size):
     max_location_x = 0
     global stored_images
     global thumbnail_sizes
+    global images
     size = thumbnail_sizes[im_size]
     canvas.delete("image")
     for image in stored_images[im_size]:
-        #store image number and file name in dictionary
-        canvas.create_image(location_x, location_y, anchor=NW, image=image, tags=("image", str(location_x)+","+str(location_y)))
-        print(canvas.find_all())
+        canvas.create_image(location_x, location_y, anchor=NW, image=image, tags=("image", str(location_x)+","+str(location_y))) #store image location as tag
+        print("Canvas contents: "+str(canvas.find_all()))
+        image_names[str(location_x)+","+str(location_y)] = images[image_number].filename
         image_number += 1
         location_x += size[0] + 10
         if location_x >= math.floor((canvas_width/(size[0]+10))) * (size[0]+10):
@@ -318,7 +357,6 @@ def resize_images(size):
     global reload_images
     global resizing_images
     global images
-    #turn canvasImages into a dictionary that stores filename and image object, then use that info in display_images to associate image number with file name
     canvasImages = []
     print("Resizing to "+str(size[0])+"x"+str(size[1]))
     if reload_images:
@@ -328,6 +366,7 @@ def resize_images(size):
             resizing_images.append(im.copy())
             resizing_images[-1].thumbnail(size)
             canvasImages.append(ImageTk.PhotoImage(resizing_images[-1]))
+            print(canvasImages[-1])
         reload_images = False
     else:
         for im in resizing_images:
