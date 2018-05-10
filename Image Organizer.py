@@ -12,7 +12,14 @@ import subprocess
 
 #A bug in PIL currently causes the application to crash when loading a large number of images. PIL also doesn't like images that have been programmatically truncated incorrectly (inconsistent sizes?)
 
-folder = os.path.dirname(os.path.realpath(__file__))+"\\"
+DEBUG = True
+
+folder = os.path.dirname(os.path.realpath(__file__))
+
+if os.name != "posix":
+    folder += "\\"
+else:
+    folder += "/"
 
 #accepts folder path as argument
 if len(sys.argv) > 1:
@@ -49,7 +56,7 @@ canvas.pack(fill=BOTH, expand=1)
 xscrollbar.config(command=canvas.xview)
 yscrollbar.config(command=canvas.yview)
 
-destination_locations = {"blue": "", "red": "", "orange": "", "green": ""} #where the images can be copied/moved to
+destination_locations = {"blue": "/home/abustelo/Documents/Junk/Test 1/", "red": "", "orange": "", "green": ""} #where the images can be copied/moved to
 image_names = {}
 images_to_move = {"blue": [], "red": [], "orange": [], "green": []}
 
@@ -185,6 +192,7 @@ def execute_moves():
     global folder
     command = []
     image_set = set()
+    posix_source = folder+"{"
     for color in images_to_move:
         print(color)
         if images_to_move[color] != []:
@@ -193,10 +201,16 @@ def execute_moves():
             else:
                 command = ["cp"]
             for image in images_to_move[color]:
-                print("\t"+image.split("\\")[-1])
-                command.append(image.split("\\")[-1])
+                if os.name != "posix":
+                    print("\t"+image.split("\\")[-1])
+                    command.append(image.split("\\")[-1])
+                else:
+                    print("\t"+image.split("/")[-1])
+                    posix_source += image.split("/")[-1]+"," 
                 image_set.add(image)
             if os.name == "posix":
+                posix_source = posix_source[:-1]+"}"
+                command.append(posix_source)
                 command.append(destination_locations[color])
             print("Copying images with command: \n"+str(command))
             #execute command
@@ -206,12 +220,16 @@ def execute_moves():
     else:
         command = ["rm"]
     for image in image_set:
-        command.append(image.split("\\")[-1])
+        if os.name != "posix":
+            command.append(image.split("\\")[-1])
+        else:
+            command.append(image.split("/")[-1])
     print("Deleting images with command: "+str(command))
     #delete images
     subprocess.run(command, shell=True)
     command = []
     image_set.clear()
+    display_images()
 
 resize_down_button = Button(menu_canvas, text="-", command=resize_down_click, width=10)
 resize_down_wind = menu_canvas.create_window(0, 0, anchor=NW, window=resize_down_button, height=30, width=30)
@@ -259,7 +277,7 @@ def image_number(click_position_x, click_position_y):
 def click(event):
     #clicking a 5 pixel box around the picture allows selecting that picture
     print("Creating box")
-    print("Click at: "+str(event.x)+","+str(event.y))
+    print("Click at: ("+str(event.x)+","+str(event.y)+")")
     global thumbnail_sizes
     global location_y
     global canvas_width
@@ -276,20 +294,30 @@ def click(event):
     else:
         box_location = ""
         image_location = str(event.x - event.x%(thumbnail_sizes[0][0]+10) + 10)+","+str(event.y - event.y%(thumbnail_sizes[0][1]+10) + 10)
-        if event.x%(thumbnail_sizes[0][0]+10) < (thumbnail_sizes[0][0]+10)/2:
-            top_corner_x = event.x - event.x%(thumbnail_sizes[0][0]+10) + 5
+        print("Click X if statement: "+str((event.x%(thumbnail_sizes[0][0]+10) - 5))+" < "+str((thumbnail_sizes[0][0]+10)/2))
+        if event.x%(thumbnail_sizes[0][0]+10) - 5 < (thumbnail_sizes[0][0]+10)/2:
+            print("event.x true branch")
+            top_corner_x = event.x - (event.x%(thumbnail_sizes[0][0]+10) - 5) #the -5 is to account for the 5px border on top and left, it shifts the canvas to the right by 5 pixels
+            print("Top corner x calculation: "+str(event.x)+"-"+str((event.x%(thumbnail_sizes[0][0]+10) - 5))+"="+str(top_corner_x))
             bottom_corner_x = top_corner_x+(thumbnail_sizes[0][0]+10)/2
             box_location += "left"
         else:
-            top_corner_x = event.x - event.x%(thumbnail_sizes[0][0]+10) + (thumbnail_sizes[0][0]+10)/2 + 5
+            print("event.x false branch")
+            top_corner_x = event.x - (event.x%(thumbnail_sizes[0][0]+10) - 5) + (thumbnail_sizes[0][0]+10)/2
+            print("Top corner x calculation: "+str(event.x)+"-"+str((event.x%(thumbnail_sizes[0][0]+10)) - 5)+"+"+str((thumbnail_sizes[0][0])/2)+"="+str(top_corner_x))
             bottom_corner_x = top_corner_x+(thumbnail_sizes[0][0]+10)/2
             box_location += "right"
-        if event.y%(thumbnail_sizes[0][1]+10) < (thumbnail_sizes[0][1]+10)/2:
-            top_corner_y = event.y - event.y%(thumbnail_sizes[0][1]+10) + 5
+        print("Click Y if statement: "+str((event.y%(thumbnail_sizes[0][1]+10) - 5))+" < "+str((thumbnail_sizes[0][1]+10)/2))
+        if event.y%(thumbnail_sizes[0][1]+10) - 5 < (thumbnail_sizes[0][1]+10)/2:
+            print("event.y true branch")
+            top_corner_y = event.y - (event.y%(thumbnail_sizes[0][1]+10) - 5)
+            print("Top corner y calculation: "+str(event.y)+"-"+str((event.y%(thumbnail_sizes[0][1]+10) - 5))+"="+str(top_corner_y))
             bottom_corner_y = top_corner_y+(thumbnail_sizes[0][1]+10)/2
             box_location = "top" + box_location
         else:
-            top_corner_y = event.y - event.y%(thumbnail_sizes[0][1]+10) + (thumbnail_sizes[0][1])/2 + 10
+            print("event.y false branch")
+            top_corner_y = event.y - (event.y%(thumbnail_sizes[0][1]+10) - 5) + (thumbnail_sizes[0][1]+10)/2
+            print("Top corner y calculation: "+str(event.y)+"-"+str((event.y%(thumbnail_sizes[0][1]+10) - 5))+"+"+str((thumbnail_sizes[0][1]+10)/2)+"="+str(top_corner_y))
             bottom_corner_y = top_corner_y+(thumbnail_sizes[0][1]+10)/2
             box_location = "bottom" + box_location
         color = ""
@@ -338,6 +366,7 @@ def display_images(im_size):
     canvas.delete("image")
     for image in stored_images[im_size]:
         canvas.create_image(location_x, location_y, anchor=NW, image=image, tags=("image", str(location_x)+","+str(location_y))) #store image location as tag
+        print("Image location: "+str(location_x)+","+str(location_y))
         print("Canvas contents: "+str(canvas.find_all()))
         image_names[str(location_x)+","+str(location_y)] = images[image_number].filename
         image_number += 1
@@ -397,4 +426,8 @@ def main():
     root.mainloop()
     
 if __name__ == "__main__":
+    if DEBUG == False:
+        def print(arg):
+            #do nothing
+            1+2
     main()
