@@ -1,6 +1,9 @@
 # Image-Organizer
 An image organizing tool
 
+This application will list all the images in a directory. The user can designate up to four destination directories, each mapped to one quadrant and a corresponding color. For example, the top left of an image corresponds to the color blue. Clicking on an image's top left quadrant creates a blue box behind the image that marks that images as selected, and when the execute button is clicked, all images marked with blue boxes will be moved to the folder specified in the blue directory button. Images can be marked for more than one color/directory at the same time so an image can be copied to all the marked directories, and then the original deleted.
+
+The problem I am trying to solve with this application is having hundreds or thousands of images in a single directory and having to sort them into sub-directories. Doing this by hand using ctrl+right-click or shift+right-click or even ctrl+shift+right-click is tedius, error-prone, and one accidental misclick can undo hundreds of selections. Once this application is done, this particular type of task should be much easier and much less frustrating.
 
 I am building it in Python 3 as a way to practice building a tkinter GUI and to try to build something that I sort of want for myself. First step is to get it working, but I'll be cleaning it up after I'm done.
 
