@@ -11,4 +11,6 @@ There is currently a bug when loading a lot of images at once where the image li
 
 There are numerous other bugs that I am aware of but I'm working on those too.
 
+I shouldn't have to say this, but this program is very, VERY buggy and could potentially delete stuff you don't want it to or cause other unspecified damage. I mean, it shouldn't, but you never know. Use at your own risk.
+
 I added a license because I don't want any trouble, but there's not much to see right now.
