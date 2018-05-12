@@ -38,6 +38,8 @@ max_location_x = 0 #keeps track of horizontal scrolling area
 
 root = Tk()
 root.title("Image Organizer")
+img = PhotoImage(file='icon.gif') #icon must be a gif
+root.tk.call('wm', 'iconphoto', root._w, img)
 canvas_width = 500
 canvas_height = 500
 #root.geometry(str(canvas_width+1)+'x'+str(canvas_height+1))
@@ -288,12 +290,11 @@ def click(event):
         images_in_last_row = image_count
     print("Images in last row: "+str(images_in_last_row)+", canvas width: "+str(canvas_width))
     print("location y: "+str(location_y))
-    #bug where 3 images present and image size = 100 and pressing at location (32x112) causes blue square to be selected incorrectly
-    if event.y >= location_y + thumbnail_sizes[0][1]+5 or (event.y > location_y and event.y < location_y + thumbnail_sizes[0][1]+5 and event.x >= (images_in_last_row * (thumbnail_sizes[0][0]+10) - 5)):
+    if event.y >= location_y + thumbnail_sizes[0][1]+10 or (event.y > location_y and event.y < location_y + thumbnail_sizes[0][1]+10 and event.x >= (images_in_last_row * (thumbnail_sizes[0][0]+10))):
         print("OUT OF BOUNDS")
     else:
         box_location = ""
-        image_location = str(event.x - event.x%(thumbnail_sizes[0][0]+10) + 5)+","+str(event.y - event.y%(thumbnail_sizes[0][1]+10) + 5)
+        image_location = str(event.x - (event.x-5)%(thumbnail_sizes[0][0]+10))+","+str(event.y - (event.y-5)%(thumbnail_sizes[0][1]+10))
         print("Image location: "+str(image_location))
         print("Click X if statement: "+str((event.x-5)%(thumbnail_sizes[0][0]+10))+" < "+str((thumbnail_sizes[0][0]+10)/2))
         if (event.x-5)%(thumbnail_sizes[0][0]+10) < (thumbnail_sizes[0][0]+10)/2:
@@ -308,8 +309,8 @@ def click(event):
             print("Top corner x calculation: "+str(event.x)+"-"+str(((event.x-5)%(thumbnail_sizes[0][0]+10)))+"+"+str((thumbnail_sizes[0][0])/2)+"="+str(top_corner_x))
             bottom_corner_x = top_corner_x+(thumbnail_sizes[0][0]+10)/2
             box_location += "right"
-        print("Click Y if statement: "+str((event.y%(thumbnail_sizes[0][1]+10) - 5))+" < "+str((thumbnail_sizes[0][1]+10)/2))
-        if event.y%(thumbnail_sizes[0][1]+10) - 5 < (thumbnail_sizes[0][1]+10)/2:
+        print("Click Y if statement: "+str(((event.y-5)%(thumbnail_sizes[0][1]+10)))+" < "+str((thumbnail_sizes[0][1]+10)/2))
+        if (event.y-5)%(thumbnail_sizes[0][1]+10) < (thumbnail_sizes[0][1]+10)/2:
             print("event.y true branch")
             top_corner_y = event.y - ((event.y-5)%(thumbnail_sizes[0][1]+10))
             print("Top corner y calculation: "+str(event.y)+"-"+str(((event.y-5)%(thumbnail_sizes[0][1]+10)))+"="+str(top_corner_y))
@@ -357,8 +358,8 @@ def display_images(im_size):
     image_number = 0
     global location_y
     global max_location_x
-    location_x = 10
-    location_y = 10
+    location_x = 5
+    location_y = 5
     max_location_x = 0
     global stored_images
     global thumbnail_sizes
@@ -366,16 +367,16 @@ def display_images(im_size):
     size = thumbnail_sizes[im_size]
     canvas.delete("image")
     for image in stored_images[im_size]:
-        canvas.create_image(location_x, location_y, anchor=NW, image=image, tags=("image", str(location_x-5)+","+str(location_y-5))) #store image location as tag
+        canvas.create_image(location_x+5, location_y+5, anchor=NW, image=image, tags=("image", str(location_x)+","+str(location_y))) #store image location as tag
         print("Actual Image location: "+str(location_x)+","+str(location_y)+". Image boundary: "+str(location_x-5)+","+str(location_y-5))
         print("Canvas contents: "+str(canvas.find_all()))
-        image_names[str(location_x-5)+","+str(location_y-5)] = images[image_number].filename
+        image_names[str(location_x)+","+str(location_y)] = images[image_number].filename
         image_number += 1
         location_x += size[0] + 10
         if location_x >= math.floor((canvas_width/(size[0]+10))) * (size[0]+10):
             if location_x > max_location_x:
-                max_location_x = location_x - 10
-            location_x = 10
+                max_location_x = location_x
+            location_x = 5
             location_y += size[1] + 10
     print("location_y: "+str(location_y))
     print("max_location_x: "+str(max_location_x))
