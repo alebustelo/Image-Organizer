@@ -9,6 +9,9 @@ import subprocess
 #-add menu bar at top with configuration and exit options
 #-add labels with names of target folders
 #-add image selecting feature
+#BUG: clicking at right edge of canvas, creates box where it shouldn't
+#BUG: resizing to very large sizes gives division or mod by zero error
+#BUG: need to resize and replace color boxes when resizing images. Maybe clear canvas and go through images again, looking for tagged images to draw boxes again
 
 #A bug in PIL currently causes the application to crash when loading a large number of images. PIL also doesn't like images that have been programmatically truncated incorrectly (inconsistent sizes?)
 
@@ -42,6 +45,8 @@ img = PhotoImage(file='icon.gif') #icon must be a gif
 root.tk.call('wm', 'iconphoto', root._w, img)
 canvas_width = 500
 canvas_height = 500
+canvas_margin = 5 #margin around outer edge of canvas
+image_margin = 10 #margin around images so that selection boxes can be seen behind the image
 #root.geometry(str(canvas_width+1)+'x'+str(canvas_height+1))
 
 menu_canvas = Canvas(root, width=canvas_width, height=30)
@@ -266,13 +271,15 @@ execute_wind = menu_canvas.create_window(350, 0, anchor=NW, window=execute_butto
 def image_number(click_position_x, click_position_y):
     global thumbnail_sizes
     global canvas_width
+    global canvas_margin
+    global image_margin
     print("thumbnail width: "+str(thumbnail_sizes[0][0])+", height: "+str(thumbnail_sizes[0][1]))
-    if click_position_x < 5 or click_position_y < 5:
+    if click_position_x < canvas_margin or click_position_y < canvas_margin:
         image_num = -1
     else:
-        image_in_row = math.floor((click_position_x-5)/(thumbnail_sizes[0][0]+10))
-        row_number = math.floor((click_position_y-5)/(thumbnail_sizes[0][1]+10))
-        image_num = (row_number) * math.floor(canvas_width/(thumbnail_sizes[0][0]+10)) + (image_in_row)
+        image_in_row = math.floor((click_position_x-canvas_margin)/(thumbnail_sizes[0][0]+image_margin))
+        row_number = math.floor((click_position_y-canvas_margin)/(thumbnail_sizes[0][1]+image_margin))
+        image_num = (row_number) * math.floor(canvas_width/(thumbnail_sizes[0][0]+image_margin)) + (image_in_row)
         print("Image in row: "+str(image_in_row)+", row number: "+str(row_number)+", Image number: "+str(image_num))
     return image_num
 
@@ -283,44 +290,46 @@ def click(event):
     global thumbnail_sizes
     global location_y
     global canvas_width
+    global canvas_margin
+    global image_margin
     global image_count
     global image_names
-    images_in_last_row = image_count%(math.floor(canvas_width/(thumbnail_sizes[0][0]+10))) #if images don't fit in screen, then div by 0 or mod by 0 error
+    images_in_last_row = image_count%(math.floor(canvas_width/(thumbnail_sizes[0][0]+image_margin))) #if images don't fit in screen, then div by 0 or mod by 0 error
     if images_in_last_row == 0:
         images_in_last_row = image_count
     print("Images in last row: "+str(images_in_last_row)+", canvas width: "+str(canvas_width))
     print("location y: "+str(location_y))
-    if event.y >= location_y + thumbnail_sizes[0][1]+10 or (event.y > location_y and event.y < location_y + thumbnail_sizes[0][1]+10 and event.x >= (images_in_last_row * (thumbnail_sizes[0][0]+10))):
+    if event.x <= canvas_margin or event.y <= canvas_margin or event.y >= location_y + thumbnail_sizes[0][1]+image_margin or (event.y > location_y and event.y < location_y + thumbnail_sizes[0][1]+image_margin and event.x >= (images_in_last_row * (thumbnail_sizes[0][0]+image_margin))):
         print("OUT OF BOUNDS")
     else:
         box_location = ""
-        image_location = str(event.x - (event.x-5)%(thumbnail_sizes[0][0]+10))+","+str(event.y - (event.y-5)%(thumbnail_sizes[0][1]+10))
+        image_location = str(event.x - (event.x-canvas_margin)%(thumbnail_sizes[0][0]+image_margin))+","+str(event.y - (event.y-canvas_margin)%(thumbnail_sizes[0][1]+image_margin))
         print("Image location: "+str(image_location))
-        print("Click X if statement: "+str((event.x-5)%(thumbnail_sizes[0][0]+10))+" < "+str((thumbnail_sizes[0][0]+10)/2))
-        if (event.x-5)%(thumbnail_sizes[0][0]+10) < (thumbnail_sizes[0][0]+10)/2:
+        print("Click X if statement: "+str((event.x-canvas_margin)%(thumbnail_sizes[0][0]+image_margin))+" < "+str((thumbnail_sizes[0][0]+image_margin)/2))
+        if (event.x-canvas_margin)%(thumbnail_sizes[0][0]+image_margin) < (thumbnail_sizes[0][0]+image_margin)/2:
             print("event.x true branch")
-            top_corner_x = event.x - ((event.x-5)%(thumbnail_sizes[0][0]+10)) #the -5 is to account for the 5px border on top and left, it shifts the canvas to the right by 5 pixels
-            print("Top corner x calculation: "+str(event.x)+"-"+str(((event.x-5)%(thumbnail_sizes[0][0]+10)))+"="+str(top_corner_x))
-            bottom_corner_x = top_corner_x+(thumbnail_sizes[0][0]+10)/2
+            top_corner_x = event.x - ((event.x-canvas_margin)%(thumbnail_sizes[0][0]+image_margin)) #the -canvas_margin is to account for the canvas_margin px border on top and left, it shifts the canvas to the right by canvas_margin pixels
+            print("Top corner x calculation: "+str(event.x)+"-"+str(((event.x-canvas_margin)%(thumbnail_sizes[0][0]+image_margin)))+"="+str(top_corner_x))
+            bottom_corner_x = top_corner_x+(thumbnail_sizes[0][0]+image_margin)/2
             box_location += "left"
         else:
             print("event.x false branch")
-            top_corner_x = event.x - ((event.x-5)%(thumbnail_sizes[0][0]+10)) + (thumbnail_sizes[0][0]+10)/2
-            print("Top corner x calculation: "+str(event.x)+"-"+str(((event.x-5)%(thumbnail_sizes[0][0]+10)))+"+"+str((thumbnail_sizes[0][0])/2)+"="+str(top_corner_x))
-            bottom_corner_x = top_corner_x+(thumbnail_sizes[0][0]+10)/2
+            top_corner_x = event.x - ((event.x-canvas_margin)%(thumbnail_sizes[0][0]+image_margin)) + (thumbnail_sizes[0][0]+image_margin)/2
+            print("Top corner x calculation: "+str(event.x)+"-"+str(((event.x-canvas_margin)%(thumbnail_sizes[0][0]+image_margin)))+"+"+str((thumbnail_sizes[0][0]+image_margin)/2)+"="+str(top_corner_x))
+            bottom_corner_x = top_corner_x+(thumbnail_sizes[0][0]+image_margin)/2
             box_location += "right"
-        print("Click Y if statement: "+str(((event.y-5)%(thumbnail_sizes[0][1]+10)))+" < "+str((thumbnail_sizes[0][1]+10)/2))
-        if (event.y-5)%(thumbnail_sizes[0][1]+10) < (thumbnail_sizes[0][1]+10)/2:
+        print("Click Y if statement: "+str(((event.y-canvas_margin)%(thumbnail_sizes[0][1]+image_margin)))+" < "+str((thumbnail_sizes[0][1]+image_margin)/2))
+        if (event.y-canvas_margin)%(thumbnail_sizes[0][1]+image_margin) < (thumbnail_sizes[0][1]+image_margin)/2:
             print("event.y true branch")
-            top_corner_y = event.y - ((event.y-5)%(thumbnail_sizes[0][1]+10))
-            print("Top corner y calculation: "+str(event.y)+"-"+str(((event.y-5)%(thumbnail_sizes[0][1]+10)))+"="+str(top_corner_y))
-            bottom_corner_y = top_corner_y+(thumbnail_sizes[0][1]+10)/2
+            top_corner_y = event.y - ((event.y-canvas_margin)%(thumbnail_sizes[0][1]+image_margin))
+            print("Top corner y calculation: "+str(event.y)+"-"+str(((event.y-canvas_margin)%(thumbnail_sizes[0][1]+image_margin)))+"="+str(top_corner_y))
+            bottom_corner_y = top_corner_y+(thumbnail_sizes[0][1]+image_margin)/2
             box_location = "top" + box_location
         else:
             print("event.y false branch")
-            top_corner_y = event.y - ((event.y-5)%(thumbnail_sizes[0][1]+10)) + (thumbnail_sizes[0][1]+10)/2
-            print("Top corner y calculation: "+str(event.y)+"-"+str(((event.y-5)%(thumbnail_sizes[0][1]+10)))+"+"+str((thumbnail_sizes[0][1]+10)/2)+"="+str(top_corner_y))
-            bottom_corner_y = top_corner_y+(thumbnail_sizes[0][1]+10)/2
+            top_corner_y = event.y - ((event.y-canvas_margin)%(thumbnail_sizes[0][1]+image_margin)) + (thumbnail_sizes[0][1]+image_margin)/2
+            print("Top corner y calculation: "+str(event.y)+"-"+str(((event.y-canvas_margin)%(thumbnail_sizes[0][1]+image_margin)))+"+"+str((thumbnail_sizes[0][1]+image_margin)/2)+"="+str(top_corner_y))
+            bottom_corner_y = top_corner_y+(thumbnail_sizes[0][1]+image_margin)/2
             box_location = "bottom" + box_location
         color = ""
         if box_location == "topleft":
@@ -358,26 +367,29 @@ def display_images(im_size):
     image_number = 0
     global location_y
     global max_location_x
-    location_x = 5
-    location_y = 5
+    global canvas_margin
+    global image_margin
+    location_x = canvas_margin
+    location_y = canvas_margin
     max_location_x = 0
     global stored_images
     global thumbnail_sizes
     global images
     size = thumbnail_sizes[im_size]
+    image_margin = math.ceil(size[0]/5)
     canvas.delete("image")
     for image in stored_images[im_size]:
-        canvas.create_image(location_x+5, location_y+5, anchor=NW, image=image, tags=("image", str(location_x)+","+str(location_y))) #store image location as tag
-        print("Actual Image location: "+str(location_x)+","+str(location_y)+". Image boundary: "+str(location_x-5)+","+str(location_y-5))
+        canvas.create_image(location_x+(image_margin/2), location_y+(image_margin/2), anchor=NW, image=image, tags=("image", str(location_x)+","+str(location_y))) #store image location as tag
+        print("Actual Image location: "+str(location_x)+","+str(location_y)+". Image boundary: "+str(location_x+(image_margin/2))+","+str(location_y+(image_margin/2)))
         print("Canvas contents: "+str(canvas.find_all()))
         image_names[str(location_x)+","+str(location_y)] = images[image_number].filename
         image_number += 1
-        location_x += size[0] + 10
-        if location_x >= math.floor((canvas_width/(size[0]+10))) * (size[0]+10):
+        location_x += size[0] + image_margin
+        if location_x >= math.floor((canvas_width/(size[0]+image_margin))) * (size[0]+image_margin):
             if location_x > max_location_x:
                 max_location_x = location_x
-            location_x = 5
-            location_y += size[1] + 10
+            location_x = canvas_margin
+            location_y += size[1] + image_margin
     print("location_y: "+str(location_y))
     print("max_location_x: "+str(max_location_x))
     canvas.configure(scrollregion=(0,0,canvas_width,location_y))
