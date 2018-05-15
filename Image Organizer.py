@@ -284,7 +284,7 @@ def image_number(click_position_x, click_position_y):
     return image_num
 
 def click(event):
-    #clicking a 5 pixel box around the picture allows selecting that picture
+    #clicking a image_margin/2 pixel box around the picture allows selecting that picture
     print("Creating box")
     print("Click at: ("+str(event.x)+","+str(event.y)+")")
     global thumbnail_sizes
@@ -299,7 +299,14 @@ def click(event):
         images_in_last_row = image_count
     print("Images in last row: "+str(images_in_last_row)+", canvas width: "+str(canvas_width))
     print("location y: "+str(location_y))
-    if event.x <= canvas_margin or event.y <= canvas_margin or event.y >= location_y + thumbnail_sizes[0][1]+image_margin or (event.y > location_y and event.y < location_y + thumbnail_sizes[0][1]+image_margin and event.x >= (images_in_last_row * (thumbnail_sizes[0][0]+image_margin))):
+    if (event.x <= canvas_margin or 
+        event.y <= canvas_margin or 
+        event.y >= location_y + thumbnail_sizes[0][1]+image_margin or 
+        (   event.y > location_y and 
+            event.y < location_y + thumbnail_sizes[0][1]+image_margin and 
+            event.x >= (images_in_last_row * (thumbnail_sizes[0][0]+image_margin))
+        )
+       ):
         print("OUT OF BOUNDS")
     else:
         box_location = ""
