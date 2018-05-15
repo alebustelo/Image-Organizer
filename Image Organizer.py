@@ -106,6 +106,10 @@ def resize_down_click():
 
 #expensive because has to reload all images again
 def resize_up_click():
+    # for color in images_to_move:
+    #     print(color)
+    #     for im in images_to_move[color]:
+    #         print(im)
     global thumbnail_sizes
     global reload_images
     global stored_images
@@ -386,7 +390,7 @@ def display_images(im_size):
     image_margin = math.ceil(size[0]/5)
     canvas.delete("image")
     for image in stored_images[im_size]:
-        canvas.create_image(location_x+(image_margin/2), location_y+(image_margin/2), anchor=NW, image=image, tags=("image", str(location_x)+","+str(location_y))) #store image location as tag
+        canvas.create_image(location_x+(image_margin/2), location_y+(image_margin/2), anchor=NW, image=image, tags=("image", str(location_x)+","+str(location_y), images[image_number].filename)) #store image location as tag
         print("Actual Image location: "+str(location_x)+","+str(location_y)+". Image boundary: "+str(location_x+(image_margin/2))+","+str(location_y+(image_margin/2)))
         print("Canvas contents: "+str(canvas.find_all()))
         image_names[str(location_x)+","+str(location_y)] = images[image_number].filename
