@@ -9,7 +9,6 @@ import subprocess
 #-add menu bar at top with configuration and exit options
 #-add labels with names of target folders
 #-add image selecting feature
-#BUG: clicking at right edge of canvas, creates box where it shouldn't
 #BUG: resizing to very large sizes gives division or mod by zero error
 #BUG: need to resize and replace color boxes when resizing images. Maybe clear canvas and go through images again, looking for tagged images to draw boxes again
 
@@ -298,12 +297,13 @@ def click(event):
     global image_margin
     global image_count
     global image_names
-    images_in_last_row = image_count%(math.floor(canvas_width/(thumbnail_sizes[0][0]+image_margin))) #if images don't fit in screen, then div by 0 or mod by 0 error
+    images_in_last_row = image_count%(math.floor((canvas_width)/(thumbnail_sizes[0][0]+image_margin))) #if images don't fit in screen, then div by 0 or mod by 0 error
     if images_in_last_row == 0:
         images_in_last_row = image_count
     print("Images in last row: "+str(images_in_last_row)+", canvas width: "+str(canvas_width))
     print("location y: "+str(location_y))
-    if (event.x <= canvas_margin or 
+    if (event.x >= math.floor((canvas_width)/(thumbnail_sizes[0][0]+image_margin))*(thumbnail_sizes[0][0]+image_margin)+canvas_margin or
+        event.x <= canvas_margin or 
         event.y <= canvas_margin or 
         event.y >= location_y + thumbnail_sizes[0][1]+image_margin or 
         (   event.y > location_y and 
