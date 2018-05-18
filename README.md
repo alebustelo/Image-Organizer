@@ -10,8 +10,7 @@ On Windows:
 pip3 install Pillow
 
 On Ubuntu:
-sudo apt install python3-pil
-sudo apt install python3-pil.imagetk
+sudo apt install python3-pil python3-pil.imagetk
 
 I am building it in Python 3 as a way to practice building a tkinter GUI and to try to build something that I sort of want for myself. First step is to get it working, but I'll be cleaning it up after I'm done.
 
