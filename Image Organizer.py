@@ -6,10 +6,7 @@ import glob, os, math
 import subprocess
 
 #TODO:
-#-add menu bar at top with configuration and exit options
-#-add labels with names of target folders
-#-add image selecting feature
-#BUG: resizing to very large sizes gives division or mod by zero error
+#-add menu ribbon at top with configuration and exit options
 #BUG: need to resize and replace color boxes when resizing images. Maybe clear canvas and go through images again, looking for tagged images to draw boxes again
 
 #A bug in PIL currently causes the application to crash when loading a large number of images. PIL also doesn't like images that have been programmatically truncated incorrectly (inconsistent sizes?)
@@ -110,45 +107,69 @@ def resize_up_click():
     #     for im in images_to_move[color]:
     #         print(im)
     global thumbnail_sizes
-    global reload_images
-    global stored_images
-    global current_size
-    current_size = 0
-    thumbnail_sizes[0] = thumbnail_sizes[0][0]+10, thumbnail_sizes[0][1]+10
-    print("Custom size: "+str(thumbnail_sizes[0]))
-    reload_images = True
-    stored_images[0] = resize_images(thumbnail_sizes[0])
-    display_images(0)
+    global canvas_margin
+    global image_margin
+    global canvas_width
+    if thumbnail_sizes[0][0] + image_margin + 2*canvas_margin + 10 <= canvas_width:
+        global reload_images
+        global stored_images
+        global current_size
+        current_size = 0
+        thumbnail_sizes[0] = thumbnail_sizes[0][0]+10, thumbnail_sizes[0][1]+10
+        print("Custom size: "+str(thumbnail_sizes[0]))
+        reload_images = True
+        stored_images[0] = resize_images(thumbnail_sizes[0])
+        display_images(0)
+    else:
+        print("Image resize failed, image too big or canvas too small")
 
 def resize_small_click():
     global thumbnail_sizes
-    global current_size
-    current_size = 1
-    if thumbnail_sizes[0][0] < thumbnail_sizes[1][0] or thumbnail_sizes[0][1] < thumbnail_sizes[1][1]:
-        global reload_images
-        reload_images = True
-    thumbnail_sizes[0] = thumbnail_sizes[1]
-    display_images(1)
+    global canvas_margin
+    global image_margin
+    global canvas_width
+    if thumbnail_sizes[1][0] + image_margin + 2*canvas_margin <= canvas_width:
+        global current_size
+        current_size = 1
+        if thumbnail_sizes[0][0] < thumbnail_sizes[1][0] or thumbnail_sizes[0][1] < thumbnail_sizes[1][1]:
+            global reload_images
+            reload_images = True
+        thumbnail_sizes[0] = thumbnail_sizes[1]
+        display_images(1)
+    else:
+        print("Image resize failed, image too big or canvas too small")
     
 def resize_med_click():
     global thumbnail_sizes
-    global current_size
-    current_size = 2
-    if thumbnail_sizes[0][0] < thumbnail_sizes[2][0] or thumbnail_sizes[0][1] < thumbnail_sizes[2][1]:
-        global reload_images
-        reload_images = True
-    thumbnail_sizes[0] = thumbnail_sizes[2]
-    display_images(2)
+    global canvas_margin
+    global image_margin
+    global canvas_width
+    if thumbnail_sizes[2][0] + image_margin + 2*canvas_margin <= canvas_width:
+        global current_size
+        current_size = 2
+        if thumbnail_sizes[0][0] < thumbnail_sizes[2][0] or thumbnail_sizes[0][1] < thumbnail_sizes[2][1]:
+            global reload_images
+            reload_images = True
+        thumbnail_sizes[0] = thumbnail_sizes[2]
+        display_images(2)
+    else:
+        print("Image resize failed, image too big or canvas too small")
 
 def resize_large_click():
     global thumbnail_sizes
-    global current_size
-    current_size = 3
-    if thumbnail_sizes[0][0] < thumbnail_sizes[3][0] or thumbnail_sizes[0][1] < thumbnail_sizes[3][1]:
-        global reload_images
-        reload_images = True    
-    thumbnail_sizes[0] = thumbnail_sizes[3]
-    display_images(3)
+    global canvas_margin
+    global image_margin
+    global canvas_width
+    if thumbnail_sizes[3][0] + image_margin + 2*canvas_margin <= canvas_width:
+        global current_size
+        current_size = 3
+        if thumbnail_sizes[0][0] < thumbnail_sizes[3][0] or thumbnail_sizes[0][1] < thumbnail_sizes[3][1]:
+            global reload_images
+            reload_images = True    
+        thumbnail_sizes[0] = thumbnail_sizes[3]
+        display_images(3)
+    else:
+        print("Image resize failed, image too big or canvas too small")
     
 blue_var = StringVar()
 blue_var.set(destination_locations["blue"])
@@ -388,10 +409,11 @@ def display_images(im_size):
     global images
     size = thumbnail_sizes[im_size]
     image_margin = math.ceil(size[0]/5)
+    root.minsize(thumbnail_sizes[im_size][0]+image_margin+2*canvas_margin, thumbnail_sizes[im_size][1]+image_margin+2*canvas_margin)
     canvas.delete("image")
     for image in stored_images[im_size]:
         canvas.create_image(location_x+(image_margin/2), location_y+(image_margin/2), anchor=NW, image=image, tags=("image", str(location_x)+","+str(location_y), images[image_number].filename)) #store image location as tag
-        print("Actual Image location: "+str(location_x)+","+str(location_y)+". Image boundary: "+str(location_x+(image_margin/2))+","+str(location_y+(image_margin/2)))
+        print("Actual Image location: ("+str(location_x)+","+str(location_y)+"). Image boundary: ("+str(location_x+(image_margin/2))+","+str(location_y+(image_margin/2))+")")
         print("Canvas contents: "+str(canvas.find_all()))
         image_names[str(location_x)+","+str(location_y)] = images[image_number].filename
         image_number += 1
