@@ -1,8 +1,7 @@
 #!/usr/bin/python3
-from PIL import ImageTk
-import PIL.Image
-from tkinter import *
-import glob, os, math
+from PIL import ImageTk, Image
+import tkinter
+import glob, os, math, sys
 import subprocess
 
 #TODO:
@@ -35,9 +34,9 @@ print("Folder location: " + folder)
 location_y = 0
 max_location_x = 0 #keeps track of horizontal scrolling area
 
-root = Tk()
+root = tkinter.Tk()
 root.title("Image Organizer")
-img = PhotoImage(file='icon.gif') #icon must be a gif
+img = tkinter.PhotoImage(file='icon.gif') #icon must be a gif
 root.tk.call('wm', 'iconphoto', root._w, img)
 canvas_width = 500
 canvas_height = 500
@@ -45,16 +44,16 @@ canvas_margin = 5 #margin around outer edge of canvas
 image_margin = 10 #margin around images so that selection boxes can be seen behind the image
 #root.geometry(str(canvas_width+1)+'x'+str(canvas_height+1))
 
-menu_canvas = Canvas(root, width=canvas_width, height=30)
-menu_canvas.pack(fill=BOTH, expand=1)
+menu_canvas = tkinter.Canvas(root, width=canvas_width, height=30)
+menu_canvas.pack(fill=tkinter.BOTH, expand=1)
 
-xscrollbar = Scrollbar(root, orient=HORIZONTAL)
-xscrollbar.pack(side=BOTTOM, fill=X)
-yscrollbar = Scrollbar(root, orient=VERTICAL)
-yscrollbar.pack(side=RIGHT, fill=Y)
+xscrollbar = tkinter.Scrollbar(root, orient=tkinter.HORIZONTAL)
+xscrollbar.pack(side=tkinter.BOTTOM, fill=tkinter.X)
+yscrollbar = tkinter.Scrollbar(root, orient=tkinter.VERTICAL)
+yscrollbar.pack(side=tkinter.RIGHT, fill=tkinter.Y)
 
-canvas = Canvas(root, width=canvas_width, height=canvas_height, scrollregion=(0,0,max_location_x,location_y), xscrollcommand=xscrollbar.set, yscrollcommand=yscrollbar.set)
-canvas.pack(fill=BOTH, expand=1)
+canvas = tkinter.Canvas(root, width=canvas_width, height=canvas_height, scrollregion=(0,0,max_location_x,location_y), xscrollcommand=xscrollbar.set, yscrollcommand=yscrollbar.set)
+canvas.pack(fill=tkinter.BOTH, expand=1)
 
 xscrollbar.config(command=canvas.xview)
 yscrollbar.config(command=canvas.yview)
@@ -171,28 +170,28 @@ def resize_large_click():
     else:
         print("Image resize failed, image too big or canvas too small")
     
-blue_var = StringVar()
+blue_var = tkinter.StringVar()
 blue_var.set(destination_locations["blue"])
 
-red_var = StringVar()
+red_var = tkinter.StringVar()
 red_var.set(destination_locations["red"])
 
-orange_var = StringVar()
+orange_var = tkinter.StringVar()
 orange_var.set(destination_locations["orange"])
 
-green_var = StringVar()
+green_var = tkinter.StringVar()
 green_var.set(destination_locations["green"])
 
 def select_location(color):
     #take user input for image destination
     print("Do something "+color)
     global destination_locations
-    top = Toplevel()
+    top = tkinter.Toplevel()
     top.geometry("%dx%d%+d%+d" % (200, 200, 300, 300))
     top.title("Choose "+color+" destination")
-    label = Label(top, text="Type in absolute path\n of destination for "+color+" images")
-    label.pack(fill=X)
-    entry = Entry(top)
+    label = tkinter.Label(top, text="Type in absolute path\n of destination for "+color+" images")
+    label.pack(fill=tkinter.X)
+    entry = tkinter.Entry(top)
     entry.insert(0, destination_locations[color])
     entry.pack()
     entry.focus_set()
@@ -212,9 +211,9 @@ def select_location(color):
         elif color == "green":
             global green_var
             green_var.set(destination_locations[color])
-    save = Button(top, text="Save", command=save_new_location)
+    save = tkinter.Button(top, text="Save", command=save_new_location)
     save.pack()
-    close = Button(top, text="Close", command=top.destroy)
+    close = tkinter.Button(top, text="Close", command=top.destroy)
     close.pack()
 
 def execute_moves():
@@ -260,37 +259,37 @@ def execute_moves():
     subprocess.run(command, shell=True)
     command = []
     image_set.clear()
-    display_images()
+    display_images(0)
 
-resize_down_button = Button(menu_canvas, text="-", command=resize_down_click, width=10)
-resize_down_wind = menu_canvas.create_window(0, 0, anchor=NW, window=resize_down_button, height=30, width=30)
+resize_down_button = tkinter.Button(menu_canvas, text="-", command=resize_down_click, width=10)
+resize_down_wind = menu_canvas.create_window(0, 0, anchor=tkinter.NW, window=resize_down_button, height=30, width=30)
 
-resize_up_button = Button(menu_canvas, text="+", command=resize_up_click, width=10)
-resize_up_wind = menu_canvas.create_window(30, 0, anchor=NW, window=resize_up_button, height=30, width=30)
+resize_up_button = tkinter.Button(menu_canvas, text="+", command=resize_up_click, width=10)
+resize_up_wind = menu_canvas.create_window(30, 0, anchor=tkinter.NW, window=resize_up_button, height=30, width=30)
 
-resize_small_button = Button(menu_canvas, text="o", command=resize_small_click, width=10)
-resize_small_wind = menu_canvas.create_window(60, 0, anchor=NW, window=resize_small_button, height=30, width=30)
+resize_small_button = tkinter.Button(menu_canvas, text="o", command=resize_small_click, width=10)
+resize_small_wind = menu_canvas.create_window(60, 0, anchor=tkinter.NW, window=resize_small_button, height=30, width=30)
 
-resize_med_button = Button(menu_canvas, text="0", command=resize_med_click, width=10)
-resize_med_wind = menu_canvas.create_window(90, 0, anchor=NW, window=resize_med_button, height=30, width=30)
+resize_med_button = tkinter.Button(menu_canvas, text="0", command=resize_med_click, width=10)
+resize_med_wind = menu_canvas.create_window(90, 0, anchor=tkinter.NW, window=resize_med_button, height=30, width=30)
 
-resize_large_button = Button(menu_canvas, text="O", command=resize_large_click, width=10)
-resize_large_wind = menu_canvas.create_window(120, 0, anchor=NW, window=resize_large_button, height=30, width=30)
+resize_large_button = tkinter.Button(menu_canvas, text="O", command=resize_large_click, width=10)
+resize_large_wind = menu_canvas.create_window(120, 0, anchor=tkinter.NW, window=resize_large_button, height=30, width=30)
 
-blue_folder_button = Button(menu_canvas, textvariable=blue_var, command=lambda: select_location("blue"), bg="blue", width=10)
-blue_folder_wind = menu_canvas.create_window(150, 0, anchor=NW, window=blue_folder_button, height=30, width=50)
+blue_folder_button = tkinter.Button(menu_canvas, textvariable=blue_var, command=lambda: select_location("blue"), bg="blue", width=10)
+blue_folder_wind = menu_canvas.create_window(150, 0, anchor=tkinter.NW, window=blue_folder_button, height=30, width=50)
 
-red_folder_button = Button(menu_canvas, textvariable=red_var, command=lambda: select_location("red"), bg="red", width=10)
-red_folder_wind = menu_canvas.create_window(200, 0, anchor=NW, window=red_folder_button, height=30, width=50)
+red_folder_button = tkinter.Button(menu_canvas, textvariable=red_var, command=lambda: select_location("red"), bg="red", width=10)
+red_folder_wind = menu_canvas.create_window(200, 0, anchor=tkinter.NW, window=red_folder_button, height=30, width=50)
 
-orange_folder_button = Button(menu_canvas, textvariable=orange_var, command=lambda: select_location("orange"), bg="orange", width=10)
-orange_folder_wind = menu_canvas.create_window(250, 0, anchor=NW, window=orange_folder_button, height=30, width=50)
+orange_folder_button = tkinter.Button(menu_canvas, textvariable=orange_var, command=lambda: select_location("orange"), bg="orange", width=10)
+orange_folder_wind = menu_canvas.create_window(250, 0, anchor=tkinter.NW, window=orange_folder_button, height=30, width=50)
 
-green_folder_button = Button(menu_canvas, textvariable=green_var, command=lambda: select_location("green"), bg="green", width=10)
-green_folder_wind = menu_canvas.create_window(300, 0, anchor=NW, window=green_folder_button, height=30, width=50)
+green_folder_button = tkinter.Button(menu_canvas, textvariable=green_var, command=lambda: select_location("green"), bg="green", width=10)
+green_folder_wind = menu_canvas.create_window(300, 0, anchor=tkinter.NW, window=green_folder_button, height=30, width=50)
 
-execute_button = Button(menu_canvas, text="Execute", command=execute_moves, width=10)
-execute_wind = menu_canvas.create_window(350, 0, anchor=NW, window=execute_button, height=30, width=70)
+execute_button = tkinter.Button(menu_canvas, text="Execute", command=execute_moves, width=10)
+execute_wind = menu_canvas.create_window(350, 0, anchor=tkinter.NW, window=execute_button, height=30, width=70)
 
 def image_number(click_position_x, click_position_y):
     global thumbnail_sizes
@@ -412,7 +411,7 @@ def display_images(im_size):
     root.minsize(thumbnail_sizes[im_size][0]+image_margin+2*canvas_margin, thumbnail_sizes[im_size][1]+image_margin+2*canvas_margin)
     canvas.delete("image")
     for image in stored_images[im_size]:
-        canvas.create_image(location_x+(image_margin/2), location_y+(image_margin/2), anchor=NW, image=image, tags=("image", str(location_x)+","+str(location_y), images[image_number].filename)) #store image location as tag
+        canvas.create_image(location_x+(image_margin/2), location_y+(image_margin/2), anchor=tkinter.NW, image=image, tags=("image", str(location_x)+","+str(location_y), images[image_number].filename)) #store image location as tag
         print("Actual Image location: ("+str(location_x)+","+str(location_y)+"). Image boundary: ("+str(location_x+(image_margin/2))+","+str(location_y+(image_margin/2))+")")
         print("Canvas contents: "+str(canvas.find_all()))
         image_names[str(location_x)+","+str(location_y)] = images[image_number].filename
@@ -458,8 +457,8 @@ def load_images():
     for files in types:
         for infile in glob.glob(folder+files):
             #print(infile)
-            file, ext = os.path.splitext(infile)
-            images.append(PIL.Image.open(infile))
+            # file, ext = os.path.splitext(infile)
+            images.append(Image.open(infile))
             image_count += 1
     print("Done loading "+str(image_count)+" images")
     reload_images = True
