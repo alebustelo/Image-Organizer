@@ -6,6 +6,7 @@ import subprocess
 
 #TODO:
 #-add menu ribbon at top with configuration and exit options
+#-change terminology to use box location instead of color (so I can change the box colors later without messing up the logic)
 #BUG: need to resize and replace color boxes when resizing images. Maybe clear canvas and go through images again, looking for tagged images to draw boxes again
 
 #A bug in PIL currently causes the application to crash when loading a large number of images. PIL also doesn't like images that have been programmatically truncated incorrectly (inconsistent sizes?)
@@ -97,14 +98,10 @@ def resize_down_click():
         thumbnail_sizes[0] = 1, 1
     print("Custom size: "+str(thumbnail_sizes[0]))
     stored_images[0] = resize_images(thumbnail_sizes[0])
-    display_images(0)
+    display_images(current_size)
 
 #expensive because has to reload all images again
 def resize_up_click():
-    # for color in images_to_move:
-    #     print(color)
-    #     for im in images_to_move[color]:
-    #         print(im)
     global thumbnail_sizes
     global canvas_margin
     global image_margin
@@ -118,7 +115,7 @@ def resize_up_click():
         print("Custom size: "+str(thumbnail_sizes[0]))
         reload_images = True
         stored_images[0] = resize_images(thumbnail_sizes[0])
-        display_images(0)
+        display_images(current_size)
     else:
         print("Image resize failed, image too big or canvas too small")
 
@@ -134,7 +131,7 @@ def resize_small_click():
             global reload_images
             reload_images = True
         thumbnail_sizes[0] = thumbnail_sizes[1]
-        display_images(1)
+        display_images(current_size)
     else:
         print("Image resize failed, image too big or canvas too small")
     
@@ -150,7 +147,7 @@ def resize_med_click():
             global reload_images
             reload_images = True
         thumbnail_sizes[0] = thumbnail_sizes[2]
-        display_images(2)
+        display_images(current_size)
     else:
         print("Image resize failed, image too big or canvas too small")
 
@@ -166,7 +163,7 @@ def resize_large_click():
             global reload_images
             reload_images = True    
         thumbnail_sizes[0] = thumbnail_sizes[3]
-        display_images(3)
+        display_images(current_size)
     else:
         print("Image resize failed, image too big or canvas too small")
     
@@ -220,6 +217,7 @@ def execute_moves():
     #prepare terminal or command line commands to mass-copy images and execute them, then delete images
     print("Moving images")
     global folder
+    global current_size
     command = []
     image_set = set()
     posix_source = folder+"{"
@@ -259,7 +257,7 @@ def execute_moves():
     subprocess.run(command, shell=True)
     command = []
     image_set.clear()
-    display_images(0)
+    display_images(current_size)
 
 resize_down_button = tkinter.Button(menu_canvas, text="-", command=resize_down_click, width=10)
 resize_down_wind = menu_canvas.create_window(0, 0, anchor=tkinter.NW, window=resize_down_button, height=30, width=30)
@@ -433,6 +431,12 @@ def resize_images(size):
     global images
     canvasImages = []
     print("Resizing to "+str(size[0])+"x"+str(size[1]))
+    for color in images_to_move:
+        print(color)
+        for im in images_to_move[color]:
+            print("    "+im)
+    #make local backup of the images_to_move list
+    #image in each color in the images_to_move backup and "unclick" the image
     if reload_images:
         resizing_images[:] = []
         for im in images:
@@ -446,6 +450,7 @@ def resize_images(size):
         for im in resizing_images:
             im.thumbnail(size)
             canvasImages.append(ImageTk.PhotoImage(im))
+    #loop through and "reclick" the images in the images_to_move backup. This should repopulate the real images_to_move list
     return canvasImages
     
 #run first time
